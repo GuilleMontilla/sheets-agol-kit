@@ -10,6 +10,8 @@ Requiere el extra opcional: pip install sheets-agol-kit[agol]
 
 import json
 import uuid
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 DEFAULT_BASEMAP = {
     "title": "Topographic",
@@ -26,8 +28,13 @@ DEFAULT_BASEMAP = {
     ],
 }
 
+# Color RGBA como secuencia de 4 enteros 0-255
+Color = Sequence[int]
 
-def simple_marker(color, size=10, outline_width=1):
+
+def simple_marker(
+    color: Color, size: int = 10, outline_width: int = 1
+) -> dict[str, Any]:
     """Simbolo de punto circular (color RGBA como lista de 4 enteros)."""
     return {
         "type": "esriSMS",
@@ -39,8 +46,11 @@ def simple_marker(color, size=10, outline_width=1):
 
 
 def unique_value_renderer(
-    field, value_colors, default_color=(120, 120, 120, 255), default_label="Otro"
-):
+    field: str,
+    value_colors: Mapping[Any, Color],
+    default_color: Color = (120, 120, 120, 255),
+    default_label: str = "Otro",
+) -> dict[str, Any]:
     """Renderer por valores unicos de un campo (dict valor -> color RGBA)."""
     return {
         "type": "uniqueValue",
@@ -48,7 +58,11 @@ def unique_value_renderer(
         "defaultSymbol": simple_marker(default_color),
         "defaultLabel": default_label,
         "uniqueValueInfos": [
-            {"value": value, "label": str(value).capitalize(), "symbol": simple_marker(color)}
+            {
+                "value": value,
+                "label": str(value).capitalize(),
+                "symbol": simple_marker(color),
+            }
             for value, color in value_colors.items()
         ],
     }
@@ -56,18 +70,18 @@ def unique_value_renderer(
 
 def build_webmap_json(
     *,
-    csv_url,
-    fields,
-    layer_title,
-    renderer,
-    popup_info=None,
-    extent=None,
-    refresh_interval=1,
-    lat_field="lat",
-    lon_field="lon",
-    basemap=None,
-    authoring_app="sheets-agol-kit",
-):
+    csv_url: str,
+    fields: list[dict[str, str]],
+    layer_title: str,
+    renderer: dict[str, Any],
+    popup_info: dict[str, Any] | None = None,
+    extent: Mapping[str, float] | None = None,
+    refresh_interval: float = 1,
+    lat_field: str = "lat",
+    lon_field: str = "lon",
+    basemap: dict[str, Any] | None = None,
+    authoring_app: str = "sheets-agol-kit",
+) -> dict[str, Any]:
     """Construye el JSON del web map con una unica capa CSV por URL.
 
     Args:
@@ -81,7 +95,9 @@ def build_webmap_json(
         lat_field / lon_field: nombres de las columnas de coordenadas.
         basemap: dict baseMap; por defecto el topografico de Esri.
     """
-    layer = {
+    from . import __version__
+
+    layer: dict[str, Any] = {
         "id": str(uuid.uuid4()),
         "title": layer_title,
         "layerType": "CSV",
@@ -103,10 +119,10 @@ def build_webmap_json(
     if popup_info:
         layer["popupInfo"] = popup_info
 
-    webmap = {
+    webmap: dict[str, Any] = {
         "version": "2.30",
         "authoringApp": authoring_app,
-        "authoringAppVersion": "1.0",
+        "authoringAppVersion": __version__,
         "spatialReference": {"wkid": 102100, "latestWkid": 3857},
         "baseMap": basemap or DEFAULT_BASEMAP,
         "operationalLayers": [layer],
@@ -125,15 +141,15 @@ def build_webmap_json(
 
 def create_webmap(
     *,
-    username,
-    password,
-    title,
-    webmap_json,
-    tags="",
-    snippet="",
-    share_everyone=True,
-    portal_url="https://www.arcgis.com",
-):
+    username: str,
+    password: str,
+    title: str,
+    webmap_json: dict[str, Any],
+    tags: str = "",
+    snippet: str = "",
+    share_everyone: bool = True,
+    portal_url: str = "https://www.arcgis.com",
+) -> Any:
     """Crea el item Web Map en ArcGIS Online y devuelve el item creado.
 
     Requiere la libreria arcgis (extra [agol]).

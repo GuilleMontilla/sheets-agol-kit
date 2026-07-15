@@ -1,5 +1,10 @@
 # sheets-agol-kit
 
+![CI](https://img.shields.io/github/actions/workflow/status/GuilleMontilla/sheets-agol-kit/ci.yml?label=CI)
+![Version](https://img.shields.io/github/v/tag/GuilleMontilla/sheets-agol-kit?label=versi%C3%B3n)
+![Python](https://img.shields.io/badge/python-3.10%2B-blue)
+![License](https://img.shields.io/badge/licencia-MIT-green)
+
 Librería Python reusable para construir mapas vivos con herramientas gratuitas:
 
 ```
@@ -15,14 +20,14 @@ cualquier flujo Form → mapa.
 ## Instalación
 
 ```
-pip install "sheets-agol-kit @ git+https://github.com/TU_USUARIO/sheets-agol-kit"
+pip install "sheets-agol-kit @ git+https://github.com/GuilleMontilla/sheets-agol-kit"
 ```
 
 Para crear el Web Map en AGOL (módulo `webmap.create_webmap`) hace falta el
 extra `agol` (instala la librería `arcgis`, que es pesada):
 
 ```
-pip install "sheets-agol-kit[agol] @ git+https://github.com/TU_USUARIO/sheets-agol-kit"
+pip install "sheets-agol-kit[agol] @ git+https://github.com/GuilleMontilla/sheets-agol-kit"
 ```
 
 ## Módulos
@@ -115,14 +120,32 @@ print(item.homepage)
 
 ## Proyecto de ejemplo
 
-[reporte-ciudadano-agol](https://github.com/tek-innovators/reporte-ciudadano-agol):
-mapa vivo de reportes ciudadanos de zonas de vertido de basura en Puerto Rico
-construido sobre esta librería.
+`reporte-ciudadano-agol` (repositorio privado de T3K Innovators): mapa vivo de
+reportes ciudadanos de zonas de vertido de basura en Puerto Rico construido
+sobre esta librería.
 
 ## Desarrollo
 
 ```
 python -m venv .venv
 .venv\Scripts\activate
-pip install -e .
+pip install -e .[dev]
 ```
+
+Tests, lint, formato y tipos (lo mismo que corre el CI):
+
+```
+pytest --cov
+ruff check .
+ruff format --check .
+mypy
+```
+
+## Contribuir
+
+Lee [CONTRIBUTING.md](CONTRIBUTING.md). Los cambios se registran en
+[CHANGELOG.md](CHANGELOG.md).
+
+## Licencia
+
+[MIT](LICENSE)

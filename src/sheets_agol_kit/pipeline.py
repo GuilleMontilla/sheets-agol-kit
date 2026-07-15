@@ -4,10 +4,22 @@ La libreria pone la mecanica (leer, iterar, escribir); el proyecto pone la
 logica de cada fila via el callback build_row.
 """
 
+from collections.abc import Callable
+from typing import Any
+
+import gspread
+
 from .sheets import read_responses, write_rows
 
 
-def sync(spreadsheet, *, responses_tab, output_tab, headers, build_row):
+def sync(
+    spreadsheet: gspread.Spreadsheet,
+    *,
+    responses_tab: str,
+    output_tab: str,
+    headers: list[str],
+    build_row: Callable[[dict[str, Any]], list[Any] | None],
+) -> tuple[int, int]:
     """Lee la pestana de respuestas y reescribe la pestana de salida.
 
     Args:

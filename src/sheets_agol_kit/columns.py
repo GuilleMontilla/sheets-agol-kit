@@ -6,15 +6,21 @@ encabezado exacto por campo via overrides.
 """
 
 import unicodedata
+from collections.abc import Iterable, Mapping, Sequence
 
 
-def normalize(text):
+def normalize(text: object) -> str:
     """Minusculas y sin acentos, para comparar encabezados."""
-    text = unicodedata.normalize("NFD", str(text).lower())
-    return "".join(c for c in text if unicodedata.category(c) != "Mn")
+    normalized = unicodedata.normalize("NFD", str(text).lower())
+    return "".join(c for c in normalized if unicodedata.category(c) != "Mn")
 
 
-def map_columns(headers, keywords, overrides=None, required=()):
+def map_columns(
+    headers: Sequence[str],
+    keywords: Mapping[str, Sequence[str]],
+    overrides: Mapping[str, str] | None = None,
+    required: Iterable[str] = (),
+) -> dict[str, str]:
     """Asocia cada campo logico con el encabezado real del Form.
 
     Args:
@@ -28,7 +34,7 @@ def map_columns(headers, keywords, overrides=None, required=()):
     Devuelve dict campo -> encabezado. Lanza ValueError si falta un requerido.
     """
     overrides = overrides or {}
-    mapping = {}
+    mapping: dict[str, str] = {}
     for field, field_keywords in keywords.items():
         override = overrides.get(field)
         if override:
@@ -42,7 +48,7 @@ def map_columns(headers, keywords, overrides=None, required=()):
     if missing:
         raise ValueError(
             f"No se detectaron las columnas {missing}. "
-            f"Encabezados encontrados: {headers}. "
+            f"Encabezados encontrados: {list(headers)}. "
             "Usa overrides para indicarlas explicitamente."
         )
     return mapping

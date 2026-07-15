@@ -10,11 +10,15 @@ del cache, user agent) se pasa como parametro al constructor de Geocoder.
 """
 
 import json
+import logging
 import re
 import time
+from collections.abc import Mapping
 from pathlib import Path
 
 import requests
+
+logger = logging.getLogger(__name__)
 
 NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
 
@@ -29,6 +33,9 @@ _PIN_RE = re.compile(r"!3d(-?\d{1,3}\.\d+)!4d(-?\d{1,3}\.\d+)")
 # Enlace corto del boton "Compartir" (no contiene coordenadas; hay que
 # seguir la redireccion hasta la URL larga).
 _SHORT_LINK_RE = re.compile(r"https?://(?:maps\.app\.goo\.gl|goo\.gl/maps)/\S+")
+
+Coords = dict[str, float]
+GeocodeResult = dict[str, float | str]
 
 
 class Geocoder:
@@ -48,36 +55,36 @@ class Geocoder:
 
     def __init__(
         self,
-        user_agent,
+        user_agent: str,
         *,
-        bounds=None,
-        query_suffix="",
-        cache_file="geocode_cache.json",
-        min_seconds_between_requests=DEFAULT_MIN_SECONDS_BETWEEN_REQUESTS,
-    ):
+        bounds: Mapping[str, float] | None = None,
+        query_suffix: str = "",
+        cache_file: str | Path = "geocode_cache.json",
+        min_seconds_between_requests: float = DEFAULT_MIN_SECONDS_BETWEEN_REQUESTS,
+    ) -> None:
         self.user_agent = user_agent
         self.bounds = bounds
         self.query_suffix = query_suffix
         self.cache_file = Path(cache_file)
         self.min_seconds_between_requests = min_seconds_between_requests
         self._last_request_time = 0.0
-        self.cache = self._load_cache()
+        self.cache: dict[str, Coords | None] = self._load_cache()
 
     # --- cache ---
 
-    def _load_cache(self):
+    def _load_cache(self) -> dict[str, Coords | None]:
         if self.cache_file.exists():
             return json.loads(self.cache_file.read_text(encoding="utf-8"))
         return {}
 
-    def _save_cache(self):
+    def _save_cache(self) -> None:
         self.cache_file.write_text(
             json.dumps(self.cache, ensure_ascii=False, indent=2), encoding="utf-8"
         )
 
     # --- bounding box ---
 
-    def _in_bounds(self, lat, lon):
+    def _in_bounds(self, lat: float, lon: float) -> bool:
         if self.bounds is None:
             return True
         return (
@@ -87,7 +94,7 @@ class Geocoder:
 
     # --- coordenadas pegadas / enlaces de Google Maps ---
 
-    def _extract_coords(self, text):
+    def _extract_coords(self, text: str) -> Coords | None:
         """Extrae lat/lon de coordenadas pegadas o de una URL larga de Google Maps.
 
         Devuelve {"lat": ..., "lon": ...} o None. Prioriza el pin exacto
@@ -99,10 +106,13 @@ class Geocoder:
             return None
         lat, lon = float(match.group(1)), float(match.group(2))
         if not self._in_bounds(lat, lon):
+            logger.debug(
+                "Coordenadas (%s, %s) fuera del bounding box; se descartan", lat, lon
+            )
             return None
         return {"lat": lat, "lon": lon}
 
-    def _resolve_short_link(self, url):
+    def _resolve_short_link(self, url: str) -> str:
         """Sigue la redireccion de un enlace corto y devuelve la URL larga final."""
         response = requests.get(
             url,
@@ -113,7 +123,7 @@ class Geocoder:
         response.raise_for_status()
         return response.url
 
-    def _parse_google_maps(self, text):
+    def _parse_google_maps(self, text: str) -> Coords | None:
         """Coordenadas exactas si el texto es un copy-paste de Google Maps.
 
         Los enlaces cortos requieren una peticion HTTP (seguir la redireccion),
@@ -128,7 +138,8 @@ class Geocoder:
             return self.cache[url]
         try:
             final_url = self._resolve_short_link(url)
-        except requests.RequestException:
+        except requests.RequestException as exc:
+            logger.info("No se pudo resolver el enlace corto %s: %s", url, exc)
             return None
         result = self._extract_coords(final_url)
         self.cache[url] = result
@@ -137,7 +148,7 @@ class Geocoder:
 
     # --- Nominatim ---
 
-    def _query_nominatim(self, query):
+    def _query_nominatim(self, query: str) -> Coords | None:
         """Consulta Nominatim respetando el limite de peticiones.
 
         Devuelve {"lat": ..., "lon": ...} o None si no hay resultado valido.
@@ -149,7 +160,7 @@ class Geocoder:
         )
         if wait > 0:
             time.sleep(wait)
-        params = {"q": query, "format": "json", "limit": 1}
+        params: dict[str, str | int] = {"q": query, "format": "json", "limit": 1}
         if self.bounds is not None:
             # Nota: para regiones sin country code propio (ej. Puerto Rico,
             # clasificado bajo "us") se restringe con viewbox+bounded en vez
@@ -172,10 +183,16 @@ class Geocoder:
             return None
         lat, lon = float(results[0]["lat"]), float(results[0]["lon"])
         if not self._in_bounds(lat, lon):
+            logger.debug(
+                "Nominatim devolvio (%s, %s) fuera del bounding box para %r",
+                lat,
+                lon,
+                query,
+            )
             return None
         return {"lat": lat, "lon": lon}
 
-    def _cached_query(self, query):
+    def _cached_query(self, query: str) -> Coords | None:
         if query in self.cache:
             return self.cache[query]
         result = self._query_nominatim(query)
@@ -183,12 +200,12 @@ class Geocoder:
         self._save_cache()
         return result
 
-    def _build_query(self, *parts):
+    def _build_query(self, *parts: str) -> str:
         return ", ".join(p for p in (*parts, self.query_suffix) if p)
 
     # --- API publica ---
 
-    def geocode(self, place, area=""):
+    def geocode(self, place: str | None, area: str | None = "") -> GeocodeResult | None:
         """Geocodifica un lugar con un area de respaldo.
 
         Devuelve {"lat", "lon", "precision"} o None si nada geocodifica:
@@ -210,5 +227,8 @@ class Geocoder:
         if area:
             result = self._cached_query(self._build_query(area))
             if result:
+                logger.debug(
+                    "%r no geocodifico; se usa el centro del area %r", place, area
+                )
                 return {**result, "precision": "area"}
         return None
