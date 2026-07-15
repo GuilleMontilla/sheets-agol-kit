@@ -1,0 +1,15 @@
+# Credenciales y configuración local
+.env
+credentials/
+
+# Datos generados
+logs/
+geocode_cache.json
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/

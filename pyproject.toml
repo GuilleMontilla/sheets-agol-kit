@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sheets-agol-kit"
+version = "0.1.0"
+description = "Pipeline reusable: Google Sheets -> geocoding (Nominatim) -> capa CSV / Web Map en ArcGIS Online"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Guillermo Montilla" }]
+dependencies = [
+    "gspread>=6.1",
+    "requests>=2.32",
+]
+
+[project.optional-dependencies]
+# Solo necesario para crear el Web Map en AGOL (webmap.create_webmap)
+agol = ["arcgis>=2.4"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
