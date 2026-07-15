@@ -1,7 +1,7 @@
 # sheets-agol-kit
 
-![CI](https://img.shields.io/github/actions/workflow/status/GuilleMontilla/sheets-agol-kit/ci.yml?label=CI)
-![Version](https://img.shields.io/github/v/tag/GuilleMontilla/sheets-agol-kit?label=versi%C3%B3n)
+![CI](https://img.shields.io/github/actions/workflow/status/GuilleMontilla/sheets-agol-kit/ci.yml?branch=main&label=CI)
+![Version](https://img.shields.io/github/v/tag/GuilleMontilla/sheets-agol-kit?sort=semver&label=versi%C3%B3n)
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue)
 ![License](https://img.shields.io/badge/licencia-MIT-green)
 
