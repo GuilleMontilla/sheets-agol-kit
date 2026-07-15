@@ -7,6 +7,12 @@ y el proyecto usa [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Changed
+
+- README reposicionado: problema concreto (Form con ubicación pegada →
+  mapa vivo en AGOL), dominios de ejemplo y documentación de captura
+  Maps / cascada de precisión.
+
 ## [0.1.0] - 2026-07-15
 
 ### Added

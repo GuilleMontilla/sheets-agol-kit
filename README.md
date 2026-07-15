@@ -5,17 +5,20 @@
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue)
 ![License](https://img.shields.io/badge/licencia-MIT-green)
 
-Librería Python reusable para construir mapas vivos con herramientas gratuitas:
+La gente responde un Google Form pegando ubicación (texto, coordenadas o
+un enlace de Maps). Tú quieres un **mapa vivo en ArcGIS Online** con
+cuenta pública y herramientas gratuitas — sin hosted feature layers ni
+servicios de pago.
 
 ```
 Google Form → Sheet (respuestas) → geocoding (Nominatim) → Sheet (pestaña limpia)
     → capa CSV vía gviz → Web Map en ArcGIS Online (cuenta pública)
 ```
 
-Nada del dominio está fijo en el código: bounding box, palabras clave de
-columnas, encabezados de salida y simbología se pasan como parámetros. La
-misma librería sirve para reportes ciudadanos, inventarios, avistamientos o
-cualquier flujo Form → mapa.
+`sheets-agol-kit` es esa tubería empaquetada. Nada del dominio está fijo
+en el código: bounding box, palabras clave de columnas, encabezados de
+salida y simbología se pasan como parámetros. El mismo kit sirve para
+varios proyectos Form → mapa.
 
 ## Instalación
 
@@ -29,16 +32,6 @@ extra `agol` (instala la librería `arcgis`, que es pesada):
 ```
 pip install "sheets-agol-kit[agol] @ git+https://github.com/GuilleMontilla/sheets-agol-kit"
 ```
-
-## Módulos
-
-| Módulo | Qué hace |
-|---|---|
-| `geocoder` | `Geocoder`: Nominatim con caché persistente, coordenadas pegadas y enlaces de Google Maps, bounding box y sufijo de consulta configurables |
-| `sheets` | Abrir un Sheet (service account), leer respuestas, reescribir la pestaña limpia, URL gviz del CSV |
-| `columns` | Detectar columnas del Form por palabras clave, con overrides opcionales |
-| `pipeline` | `sync()`: orquesta lectura → transformación → escritura |
-| `webmap` | Construir el JSON del Web Map (capa CSV, renderer, pop-ups) y crearlo en AGOL |
 
 ## Uso
 
@@ -58,11 +51,8 @@ geocoder.geocode("Plaza Palmer", "Caguas")
 # {"lat": ..., "lon": ..., "precision": "place"}
 ```
 
-`precision` indica cómo se obtuvo el punto:
-
-- `"gps"`: el texto traía coordenadas o un enlace de Google Maps.
-- `"place"`: Nominatim encontró el lugar exacto.
-- `"area"`: se cayó al centro del área de respaldo (segundo argumento).
+Ver [El truco](#el-truco-ubicación-pegada-y-cascada-de-precisión) para
+qué significa `precision` y qué formatos de Maps se capturan.
 
 ### Sincronizar un Sheet
 
@@ -118,11 +108,55 @@ item = create_webmap(
 print(item.homepage)
 ```
 
-## Proyecto de ejemplo
+## Para qué sirve
 
-`reporte-ciudadano-agol` (repositorio privado de T3K Innovators): mapa vivo de
-reportes ciudadanos de zonas de vertido de basura en Puerto Rico construido
-sobre esta librería.
+El dominio lo defines tú con parámetros. Tres ejemplos típicos:
+
+| Dominio | Entrada del Form | Salida en el mapa |
+|---|---|---|
+| Vertidos / basura | lugar + municipio | capa por `estado` |
+| Árboles / inventario | especie + barrio | capa por especie |
+| Reportes ciudadanos | qué pasó + zona | capa por tipo |
+
+Proyecto real construido sobre este kit: `reporte-ciudadano-agol`
+(repositorio privado de T3K Innovators) — mapa vivo de zonas de vertido
+de basura en Puerto Rico.
+
+## El truco: ubicación pegada y cascada de precisión
+
+Lo menos genérico del kit es cómo convierte lo que la gente pega en el
+Form en un punto en el mapa.
+
+### Formatos que capturan GPS (sin consultar Nominatim)
+
+Si el texto trae ubicación exacta, `geocode` devuelve
+`precision: "gps"`:
+
+- Coordenadas pegadas: `18.486090, -66.783960`
+- URL larga de Google Maps: pin exacto `!3d...!4d...` (prioridad) o vista
+  `@lat,lon`
+- Enlace corto del botón Compartir (`maps.app.goo.gl` / `goo.gl/maps`):
+  sigue la redirección hasta la URL larga y cachea el resultado
+
+### Cascada si no hay GPS
+
+1. `"place"` — Nominatim con lugar + área + `query_suffix`
+2. `"area"` — centro del área de respaldo (segundo argumento de `geocode`)
+3. `None` — nada geocodificó; en `sync`, esa fila se omite
+
+El caché persistente en JSON evita reconsultar el mismo texto. El
+bounding box descarta homónimos fuera de la región y restringe Nominatim
+con `viewbox` + `bounded`.
+
+## Módulos
+
+| Módulo | Qué hace |
+|---|---|
+| `geocoder` | `Geocoder`: Nominatim con caché persistente, coordenadas pegadas y enlaces de Google Maps, bounding box y sufijo de consulta configurables |
+| `sheets` | Abrir un Sheet (service account), leer respuestas, reescribir la pestaña limpia, URL gviz del CSV |
+| `columns` | Detectar columnas del Form por palabras clave, con overrides opcionales |
+| `pipeline` | `sync()`: orquesta lectura → transformación → escritura |
+| `webmap` | Construir el JSON del Web Map (capa CSV, renderer, pop-ups) y crearlo en AGOL |
 
 ## Desarrollo
 
