@@ -126,9 +126,6 @@ La librería no fija un dominio. Ejemplos de configuración típica:
 | Árboles / inventario | especie + barrio | capa por especie |
 | Reportes ciudadanos | qué ocurrió + zona | capa por tipo |
 
-Proyecto de referencia: `reporte-ciudadano-agol` (repositorio privado de
-T3K Innovators), mapa de zonas de vertido de basura en Puerto Rico
-construido sobre esta librería.
 
 ## Captura de ubicación y niveles de precisión
 
