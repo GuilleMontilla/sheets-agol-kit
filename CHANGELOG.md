@@ -7,6 +7,11 @@ y el proyecto usa [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Added
+
+- Documentación de configuración Google Form / Sheet / service account
+  (`docs/configuration.md`).
+
 ### Changed
 
 - README: tono técnico, motivo frente a ArcGIS Survey123 (alternativa

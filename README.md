@@ -43,6 +43,10 @@ pip install "sheets-agol-kit[agol] @ git+https://github.com/GuilleMontilla/sheet
 
 ## Uso
 
+Antes de sincronizar un Sheet o crear el Web Map, configura el Google Form,
+el Sheet y la service account de Google Cloud:
+[docs/configuration.md](docs/configuration.md).
+
 ### Geocodificar
 
 ```python
