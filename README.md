@@ -5,20 +5,28 @@
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue)
 ![License](https://img.shields.io/badge/licencia-MIT-green)
 
-La gente responde un Google Form pegando ubicación (texto, coordenadas o
-un enlace de Maps). Tú quieres un **mapa vivo en ArcGIS Online** con
-cuenta pública y herramientas gratuitas — sin hosted feature layers ni
-servicios de pago.
+Librería Python para el flujo **formulario → geocodificación → mapa vivo
+en ArcGIS Online**, usando herramientas gratuitas.
+
+[ArcGIS Survey123](https://www.esri.com/en-us/arcgis/products/arcgis-survey123/overview)
+resuelve ese mismo caso de uso dentro del ecosistema ArcGIS, pero suele
+requerir pertenecer a una organización o disponer de una licencia de
+pago (por ejemplo ArcGIS Pro / cuenta organizacional). Este proyecto
+ofrece una alternativa open source: Google Form + Sheets, geocoding con
+Nominatim y un Web Map en una cuenta pública de ArcGIS Online, sin
+hosted feature layers.
+
+No es un producto de Esri ni un clon de Survey123 (no cubre, por ejemplo,
+captura offline nativa o firmas). Reproduce el patrón formulario → mapa
+con la pila gratuita descrita abajo.
 
 ```
 Google Form → Sheet (respuestas) → geocoding (Nominatim) → Sheet (pestaña limpia)
     → capa CSV vía gviz → Web Map en ArcGIS Online (cuenta pública)
 ```
 
-`sheets-agol-kit` es esa tubería empaquetada. Nada del dominio está fijo
-en el código: bounding box, palabras clave de columnas, encabezados de
-salida y simbología se pasan como parámetros. El mismo kit sirve para
-varios proyectos Form → mapa.
+El dominio de cada proyecto es configurable: bounding box, palabras clave
+de columnas, encabezados de salida y simbología se pasan como parámetros.
 
 ## Instalación
 
@@ -51,8 +59,8 @@ geocoder.geocode("Plaza Palmer", "Caguas")
 # {"lat": ..., "lon": ..., "precision": "place"}
 ```
 
-Ver [El truco](#el-truco-ubicación-pegada-y-cascada-de-precisión) para
-qué significa `precision` y qué formatos de Maps se capturan.
+Detalle de `precision` y de los formatos de ubicación admitidos:
+[Captura de ubicación y niveles de precisión](#captura-de-ubicación-y-niveles-de-precisión).
 
 ### Sincronizar un Sheet
 
@@ -108,43 +116,45 @@ item = create_webmap(
 print(item.homepage)
 ```
 
-## Para qué sirve
+## Casos de uso
 
-El dominio lo defines tú con parámetros. Tres ejemplos típicos:
+La librería no fija un dominio. Ejemplos de configuración típica:
 
 | Dominio | Entrada del Form | Salida en el mapa |
 |---|---|---|
 | Vertidos / basura | lugar + municipio | capa por `estado` |
 | Árboles / inventario | especie + barrio | capa por especie |
-| Reportes ciudadanos | qué pasó + zona | capa por tipo |
+| Reportes ciudadanos | qué ocurrió + zona | capa por tipo |
 
-Proyecto real construido sobre este kit: `reporte-ciudadano-agol`
-(repositorio privado de T3K Innovators) — mapa vivo de zonas de vertido
-de basura en Puerto Rico.
+Proyecto de referencia: `reporte-ciudadano-agol` (repositorio privado de
+T3K Innovators), mapa de zonas de vertido de basura en Puerto Rico
+construido sobre esta librería.
 
-## El truco: ubicación pegada y cascada de precisión
+## Captura de ubicación y niveles de precisión
 
-Lo menos genérico del kit es cómo convierte lo que la gente pega en el
-Form en un punto en el mapa.
+Las respuestas del formulario suelen incluir texto libre, coordenadas o
+enlaces de Google Maps. El geocodificador normaliza esos valores a un
+punto (`lat`, `lon`) y un nivel de precisión.
 
-### Formatos que capturan GPS (sin consultar Nominatim)
+### Formatos con precisión `gps` (sin consultar Nominatim)
 
-Si el texto trae ubicación exacta, `geocode` devuelve
+Si el texto ya contiene una ubicación exacta, `geocode` devuelve
 `precision: "gps"`:
 
 - Coordenadas pegadas: `18.486090, -66.783960`
 - URL larga de Google Maps: pin exacto `!3d...!4d...` (prioridad) o vista
   `@lat,lon`
 - Enlace corto del botón Compartir (`maps.app.goo.gl` / `goo.gl/maps`):
-  sigue la redirección hasta la URL larga y cachea el resultado
+  resuelve la redirección hasta la URL larga y almacena el resultado en
+  caché
 
-### Cascada si no hay GPS
+### Cascada cuando no hay GPS
 
 1. `"place"` — Nominatim con lugar + área + `query_suffix`
 2. `"area"` — centro del área de respaldo (segundo argumento de `geocode`)
-3. `None` — nada geocodificó; en `sync`, esa fila se omite
+3. `None` — no fue posible geocodificar; en `sync`, esa fila se omite
 
-El caché persistente en JSON evita reconsultar el mismo texto. El
+El caché persistente en JSON evita repetir consultas idénticas. El
 bounding box descarta homónimos fuera de la región y restringe Nominatim
 con `viewbox` + `bounded`.
 

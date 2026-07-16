@@ -9,9 +9,9 @@ y el proyecto usa [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Changed
 
-- README reposicionado: problema concreto (Form con ubicación pegada →
-  mapa vivo en AGOL), dominios de ejemplo y documentación de captura
-  Maps / cascada de precisión.
+- README: tono técnico, motivo frente a ArcGIS Survey123 (alternativa
+  gratuita al flujo formulario → mapa) y sección de captura de ubicación
+  / niveles de precisión.
 
 ## [0.1.0] - 2026-07-15
 
