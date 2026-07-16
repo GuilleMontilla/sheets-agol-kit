@@ -1,12 +1,13 @@
-"""Geocodificacion con Nominatim, cache persistente y coordenadas pegadas.
+"""Nominatim geocoding with persistent cache and pasted coordinates.
 
-Si el texto trae coordenadas o un enlace de Google Maps pegado, se usan esas
-coordenadas exactas (precision "gps") sin consultar Nominatim. En caso
-contrario consulta Nominatim (OpenStreetMap) con cache persistente en JSON:
-cada texto se geocodifica una sola vez en la vida del proyecto.
+If the text already contains coordinates or a pasted Google Maps link,
+those exact coordinates are used (precision "gps") without calling
+Nominatim. Otherwise it queries Nominatim (OpenStreetMap) with a
+persistent JSON cache: each text is geocoded only once for the life of
+the project.
 
-Todo lo especifico de una region (bounding box, sufijo de la consulta, ruta
-del cache, user agent) se pasa como parametro al constructor de Geocoder.
+Everything region-specific (bounding box, query suffix, cache path,
+user agent) is passed as a constructor parameter to Geocoder.
 """
 
 import json
@@ -22,16 +23,16 @@ logger = logging.getLogger(__name__)
 
 NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
 
-# Politica de uso de Nominatim: maximo 1 peticion por segundo
+# Nominatim usage policy: at most 1 request per second
 DEFAULT_MIN_SECONDS_BETWEEN_REQUESTS = 1.1
 
-# Coordenadas pegadas de Google Maps: "18.486090, -66.783960" (tambien
-# aparecen asi en las URLs largas, despues de la "@").
+# Pasted Google Maps coordinates: "18.486090, -66.783960" (also appear
+# in long URLs after "@").
 _COORDS_RE = re.compile(r"(-?\d{1,2}\.\d{3,})\s*[,/@ ]\s*(-?\d{1,3}\.\d{3,})")
-# Pin exacto dentro de una URL larga de Google Maps: ...!3d18.48!4d-66.78...
+# Exact pin inside a long Google Maps URL: ...!3d18.48!4d-66.78...
 _PIN_RE = re.compile(r"!3d(-?\d{1,3}\.\d+)!4d(-?\d{1,3}\.\d+)")
-# Enlace corto del boton "Compartir" (no contiene coordenadas; hay que
-# seguir la redireccion hasta la URL larga).
+# Short "Share" button link (no coordinates; must follow the redirect
+# to the long URL).
 _SHORT_LINK_RE = re.compile(r"https?://(?:maps\.app\.goo\.gl|goo\.gl/maps)/\S+")
 
 Coords = dict[str, float]
@@ -39,18 +40,18 @@ GeocodeResult = dict[str, float | str]
 
 
 class Geocoder:
-    """Geocodificador parametrizable.
+    """Configurable geocoder.
 
     Args:
-        user_agent: identificador para Nominatim (incluye un email de contacto).
-        bounds: dict con min_lat/max_lat/min_lon/max_lon; los resultados fuera
-            del bounding box se descartan (homonimos de otras regiones) y la
-            consulta a Nominatim se restringe con viewbox+bounded. Si es None,
-            no se filtra.
-        query_suffix: texto que se agrega al final de cada consulta a
-            Nominatim (ej. "Puerto Rico").
-        cache_file: ruta del JSON de cache persistente.
-        min_seconds_between_requests: espera minima entre consultas a Nominatim.
+        user_agent: identifier for Nominatim (include a contact email).
+        bounds: dict with min_lat/max_lat/min_lon/max_lon; results outside
+            the bounding box are discarded (homonyms from other regions)
+            and Nominatim queries are restricted with viewbox+bounded.
+            If None, no filtering is applied.
+        query_suffix: text appended to every Nominatim query
+            (e.g. "Puerto Rico").
+        cache_file: path to the persistent JSON cache.
+        min_seconds_between_requests: minimum wait between Nominatim calls.
     """
 
     def __init__(
@@ -92,14 +93,14 @@ class Geocoder:
             and self.bounds["min_lon"] <= lon <= self.bounds["max_lon"]
         )
 
-    # --- coordenadas pegadas / enlaces de Google Maps ---
+    # --- pasted coordinates / Google Maps links ---
 
     def _extract_coords(self, text: str) -> Coords | None:
-        """Extrae lat/lon de coordenadas pegadas o de una URL larga de Google Maps.
+        """Extract lat/lon from pasted coordinates or a long Google Maps URL.
 
-        Devuelve {"lat": ..., "lon": ...} o None. Prioriza el pin exacto
-        (!3d/!4d) sobre las coordenadas de la vista (@lat,lon). Descarta
-        puntos fuera del bounding box.
+        Returns {"lat": ..., "lon": ...} or None. Prefers the exact pin
+        (!3d/!4d) over view coordinates (@lat,lon). Discards points
+        outside the bounding box.
         """
         match = _PIN_RE.search(text) or _COORDS_RE.search(text)
         if not match:
@@ -107,13 +108,13 @@ class Geocoder:
         lat, lon = float(match.group(1)), float(match.group(2))
         if not self._in_bounds(lat, lon):
             logger.debug(
-                "Coordenadas (%s, %s) fuera del bounding box; se descartan", lat, lon
+                "Coordinates (%s, %s) outside bounding box; discarded", lat, lon
             )
             return None
         return {"lat": lat, "lon": lon}
 
     def _resolve_short_link(self, url: str) -> str:
-        """Sigue la redireccion de un enlace corto y devuelve la URL larga final."""
+        """Follow a short-link redirect and return the final long URL."""
         response = requests.get(
             url,
             headers={"User-Agent": self.user_agent},
@@ -124,11 +125,11 @@ class Geocoder:
         return response.url
 
     def _parse_google_maps(self, text: str) -> Coords | None:
-        """Coordenadas exactas si el texto es un copy-paste de Google Maps.
+        """Exact coordinates if the text is a Google Maps paste.
 
-        Los enlaces cortos requieren una peticion HTTP (seguir la redireccion),
-        asi que se cachean igual que las consultas a Nominatim; los fallos de
-        red no se cachean para poder reintentar en la proxima corrida.
+        Short links require an HTTP request (follow the redirect), so they
+        are cached like Nominatim queries; network failures are not cached
+        so the next run can retry.
         """
         short_link = _SHORT_LINK_RE.search(text)
         if not short_link:
@@ -139,7 +140,7 @@ class Geocoder:
         try:
             final_url = self._resolve_short_link(url)
         except requests.RequestException as exc:
-            logger.info("No se pudo resolver el enlace corto %s: %s", url, exc)
+            logger.info("Could not resolve short link %s: %s", url, exc)
             return None
         result = self._extract_coords(final_url)
         self.cache[url] = result
@@ -149,11 +150,11 @@ class Geocoder:
     # --- Nominatim ---
 
     def _query_nominatim(self, query: str) -> Coords | None:
-        """Consulta Nominatim respetando el limite de peticiones.
+        """Query Nominatim while respecting the request rate limit.
 
-        Devuelve {"lat": ..., "lon": ...} o None si no hay resultado valido.
-        Lanza excepcion en errores de red/servidor (el llamador decide
-        reintentar), para no cachear fallos transitorios como "no encontrado".
+        Returns {"lat": ..., "lon": ...} or None if there is no valid
+        result. Raises on network/server errors (caller decides whether
+        to retry) so transient failures are not cached as "not found".
         """
         wait = self.min_seconds_between_requests - (
             time.monotonic() - self._last_request_time
@@ -162,9 +163,9 @@ class Geocoder:
             time.sleep(wait)
         params: dict[str, str | int] = {"q": query, "format": "json", "limit": 1}
         if self.bounds is not None:
-            # Nota: para regiones sin country code propio (ej. Puerto Rico,
-            # clasificado bajo "us") se restringe con viewbox+bounded en vez
-            # de countrycodes.
+            # Note: for regions without their own country code (e.g. Puerto
+            # Rico, classified under "us"), restrict with viewbox+bounded
+            # instead of countrycodes.
             params["viewbox"] = (
                 f"{self.bounds['min_lon']},{self.bounds['max_lat']},"
                 f"{self.bounds['max_lon']},{self.bounds['min_lat']}"
@@ -184,7 +185,7 @@ class Geocoder:
         lat, lon = float(results[0]["lat"]), float(results[0]["lon"])
         if not self._in_bounds(lat, lon):
             logger.debug(
-                "Nominatim devolvio (%s, %s) fuera del bounding box para %r",
+                "Nominatim returned (%s, %s) outside bounding box for %r",
                 lat,
                 lon,
                 query,
@@ -203,16 +204,16 @@ class Geocoder:
     def _build_query(self, *parts: str) -> str:
         return ", ".join(p for p in (*parts, self.query_suffix) if p)
 
-    # --- API publica ---
+    # --- public API ---
 
     def geocode(self, place: str | None, area: str | None = "") -> GeocodeResult | None:
-        """Geocodifica un lugar con un area de respaldo.
+        """Geocode a place with a fallback area.
 
-        Devuelve {"lat", "lon", "precision"} o None si nada geocodifica:
+        Returns {"lat", "lon", "precision"} or None if nothing geocodes:
 
-        - precision "gps": el texto traia coordenadas o un enlace de Google Maps.
-        - precision "place": Nominatim encontro el lugar exacto.
-        - precision "area": se cayo al centro del area de respaldo.
+        - precision "gps": the text contained coordinates or a Google Maps link.
+        - precision "place": Nominatim found the exact place.
+        - precision "area": fell back to the center of the area.
         """
         place = (place or "").strip()
         area = (area or "").strip()
@@ -227,8 +228,6 @@ class Geocoder:
         if area:
             result = self._cached_query(self._build_query(area))
             if result:
-                logger.debug(
-                    "%r no geocodifico; se usa el centro del area %r", place, area
-                )
+                logger.debug("%r did not geocode; using area center %r", place, area)
                 return {**result, "precision": "area"}
         return None

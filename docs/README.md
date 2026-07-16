@@ -1,3 +1,3 @@
-# Documentación
+# Documentation
 
-- [Configuración Google Form / Sheet / service account](configuration.md)
+- [Google Form / Sheet / service account setup](configuration.md)

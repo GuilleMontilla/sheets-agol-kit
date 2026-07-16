@@ -1,7 +1,7 @@
-"""Pipeline de sincronizacion: respuestas crudas -> pestana limpia.
+"""Sync pipeline: raw responses -> clean tab.
 
-La libreria pone la mecanica (leer, iterar, escribir); el proyecto pone la
-logica de cada fila via el callback build_row.
+The library provides the mechanics (read, iterate, write); the project
+provides per-row logic via the build_row callback.
 """
 
 from collections.abc import Callable
@@ -20,17 +20,17 @@ def sync(
     headers: list[str],
     build_row: Callable[[dict[str, Any]], list[Any] | None],
 ) -> tuple[int, int]:
-    """Lee la pestana de respuestas y reescribe la pestana de salida.
+    """Read the responses tab and rewrite the output tab.
 
     Args:
-        spreadsheet: objeto de open_spreadsheet().
-        responses_tab: pestana donde el Form guarda las respuestas (solo lectura).
-        output_tab: pestana limpia que se reescribe completa.
-        headers: encabezados de la pestana de salida.
-        build_row: funcion(respuesta_dict) -> lista de valores o None para
-            omitir esa respuesta (ej. si no se pudo geocodificar).
+        spreadsheet: object from open_spreadsheet().
+        responses_tab: tab where the Form stores responses (read-only).
+        output_tab: clean tab that is fully rewritten.
+        headers: output-tab headers.
+        build_row: function(response_dict) -> list of values or None to
+            skip that response (e.g. if geocoding failed).
 
-    Devuelve (filas_escritas, respuestas_totales).
+    Returns (rows_written, total_responses).
     """
     responses = read_responses(spreadsheet, responses_tab)
     rows = [row for row in (build_row(r) for r in responses) if row is not None]

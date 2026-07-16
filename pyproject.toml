@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sheets-agol-kit"
-description = "Pipeline reusable: Google Sheets -> geocoding (Nominatim) -> capa CSV / Web Map en ArcGIS Online"
+description = "Reusable pipeline: Google Sheets -> geocoding (Nominatim) -> CSV layer / Web Map on ArcGIS Online"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }

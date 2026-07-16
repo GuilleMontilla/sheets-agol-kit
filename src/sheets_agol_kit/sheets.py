@@ -1,7 +1,7 @@
-"""Lectura y escritura de Google Sheets via gspread (service account).
+"""Read and write Google Sheets via gspread (service account).
 
-Ninguna funcion lee variables de entorno: sheet id, ruta de la service
-account y nombres de pestanas llegan siempre como argumentos.
+No function reads environment variables: sheet id, service-account path,
+and tab names are always passed as arguments.
 """
 
 from pathlib import Path
@@ -14,13 +14,13 @@ from gspread.utils import ValueInputOption
 def open_spreadsheet(
     sheet_id: str, service_account_file: str | Path
 ) -> gspread.Spreadsheet:
-    """Abre un Sheet por su ID usando una service account de Google Cloud."""
+    """Open a Sheet by ID using a Google Cloud service account."""
     client = gspread.service_account(filename=service_account_file)
     return client.open_by_key(sheet_id)
 
 
 def read_responses(spreadsheet: gspread.Spreadsheet, tab: str) -> list[dict[str, Any]]:
-    """Devuelve las filas de una pestana como lista de diccionarios."""
+    """Return the rows of a tab as a list of dictionaries."""
     return spreadsheet.worksheet(tab).get_all_records()
 
 
@@ -30,9 +30,9 @@ def write_rows(
     headers: list[str],
     rows: list[list[Any]],
 ) -> bool:
-    """Reescribe una pestana completa con encabezados + filas.
+    """Rewrite a full tab with headers + rows.
 
-    Crea la pestana si no existe. Devuelve True si la creo.
+    Creates the tab if it does not exist. Returns True if it was created.
     """
     created = False
     try:
@@ -48,7 +48,7 @@ def write_rows(
 
 
 def gviz_csv_url(sheet_id: str, tab: str) -> str:
-    """URL del endpoint gviz que expone una pestana como CSV (Sheet publico)."""
+    """gviz endpoint URL that exposes a tab as CSV (public Sheet)."""
     return (
         f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq"
         f"?tqx=out:csv&sheet={tab}"

@@ -1,10 +1,10 @@
-## ¿Qué cambia este PR?
+## What does this PR change?
 
-## ¿Por qué?
+## Why?
 
 ## Checklist
 
-- [ ] Tests pasan localmente (`pytest`)
-- [ ] Lint y formato pasan (`ruff check .` y `ruff format --check .`)
-- [ ] Actualicé documentación si aplica
-- [ ] El título sigue Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:`)
+- [ ] Tests pass locally (`pytest`)
+- [ ] Lint and format pass (`ruff check .` and `ruff format --check .`)
+- [ ] Updated docs if applicable
+- [ ] Title follows Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:`)

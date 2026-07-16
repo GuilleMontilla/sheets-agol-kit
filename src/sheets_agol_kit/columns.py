@@ -1,8 +1,8 @@
-"""Deteccion de columnas del formulario por palabras clave.
+"""Detect form columns by keywords.
 
-Cada proyecto define sus propios campos logicos y las palabras clave que los
-identifican en los encabezados reales del Form; tambien puede forzar un
-encabezado exacto por campo via overrides.
+Each project defines its own logical fields and the keywords that match
+them in the real Form headers; it can also force an exact header per
+field via overrides.
 """
 
 import unicodedata
@@ -10,7 +10,7 @@ from collections.abc import Iterable, Mapping, Sequence
 
 
 def normalize(text: object) -> str:
-    """Minusculas y sin acentos, para comparar encabezados."""
+    """Lowercase and strip accents, for comparing headers."""
     normalized = unicodedata.normalize("NFD", str(text).lower())
     return "".join(c for c in normalized if unicodedata.category(c) != "Mn")
 
@@ -21,17 +21,18 @@ def map_columns(
     overrides: Mapping[str, str] | None = None,
     required: Iterable[str] = (),
 ) -> dict[str, str]:
-    """Asocia cada campo logico con el encabezado real del Form.
+    """Map each logical field to the real Form header.
 
     Args:
-        headers: lista de encabezados reales de la pestana de respuestas.
-        keywords: dict campo -> lista de palabras clave (se comparan
-            normalizadas, sin acentos ni mayusculas).
-        overrides: dict campo -> encabezado exacto; tiene prioridad sobre
-            las palabras clave. Valores vacios se ignoran.
-        required: campos que deben detectarse si o si.
+        headers: list of real headers from the responses tab.
+        keywords: dict field -> list of keywords (compared normalized,
+            without accents or case).
+        overrides: dict field -> exact header; takes priority over
+            keywords. Empty values are ignored.
+        required: fields that must be detected.
 
-    Devuelve dict campo -> encabezado. Lanza ValueError si falta un requerido.
+    Returns dict field -> header. Raises ValueError if a required field
+    is missing.
     """
     overrides = overrides or {}
     mapping: dict[str, str] = {}
@@ -47,8 +48,8 @@ def map_columns(
     missing = [f for f in required if f not in mapping]
     if missing:
         raise ValueError(
-            f"No se detectaron las columnas {missing}. "
-            f"Encabezados encontrados: {list(headers)}. "
-            "Usa overrides para indicarlas explicitamente."
+            f"Could not detect columns {missing}. "
+            f"Headers found: {list(headers)}. "
+            "Use overrides to specify them explicitly."
         )
     return mapping

@@ -1,113 +1,113 @@
-# Configuración: Google Form, Sheet y service account
+# Configuration: Google Form, Sheet, and service account
 
-Guía para dejar listo el entorno Google que usa `sheets-agol-kit`:
-formulario → Sheet de respuestas → lectura/escritura con service account →
-pestaña limpia expuesta como CSV (gviz) para el Web Map en ArcGIS Online.
+Guide to set up the Google side of `sheets-agol-kit`:
+form → responses Sheet → read/write with a service account →
+clean tab exposed as CSV (gviz) for the ArcGIS Online Web Map.
 
 ```mermaid
 flowchart LR
-  Form[GoogleForm] --> ResponsesTab[PestanaRespuestas]
+  Form[GoogleForm] --> ResponsesTab[ResponsesTab]
   SA[ServiceAccountJSON] -->|"Editor"| Sheet[GoogleSheet]
   Sheet --> ResponsesTab
-  Sheet --> OutputTab[PestanaSalida]
-  OutputTab -->|"gviz CSV publico"| AGOL[WebMapAGOL]
+  Sheet --> OutputTab[OutputTab]
+  OutputTab -->|"public gviz CSV"| AGOL[WebMapAGOL]
 ```
 
 ## 1. Google Cloud — service account
 
-`open_spreadsheet` autentica con un JSON de service account vía gspread.
-Nada se lee de variables de entorno: pasas la ruta del archivo como argumento.
+`open_spreadsheet` authenticates with a service-account JSON via gspread.
+Nothing is read from environment variables: you pass the file path as an
+argument.
 
-1. Entra en [Google Cloud Console](https://console.cloud.google.com/) y
-   crea o selecciona un proyecto.
-2. Habilita **Google Sheets API**
-   ([APIs y servicios → Biblioteca](https://console.cloud.google.com/apis/library)).
-3. Habilita también **Google Drive API**. gspread la usa al abrir el
-   spreadsheet por ID.
-4. Ve a **IAM y administración → Cuentas de servicio** → **Crear cuenta de
-   servicio**. Dale un nombre descriptivo (ej. `sheets-agol-kit`) y crea la
-   cuenta. No hace falta asignar roles de proyecto para este flujo.
-5. Abre la service account → **Claves** → **Agregar clave** → **Crear clave
-   nueva** → **JSON**. Se descarga un archivo `.json`.
-6. Guárdalo fuera del control de versiones, por ejemplo:
+1. Open [Google Cloud Console](https://console.cloud.google.com/) and
+   create or select a project.
+2. Enable **Google Sheets API**
+   ([APIs & Services → Library](https://console.cloud.google.com/apis/library)).
+3. Also enable **Google Drive API**. gspread uses it when opening a
+   spreadsheet by ID.
+4. Go to **IAM & Admin → Service Accounts** → **Create service account**.
+   Give it a descriptive name (e.g. `sheets-agol-kit`) and create the
+   account. No project roles are required for this flow.
+5. Open the service account → **Keys** → **Add key** → **Create new key**
+   → **JSON**. A `.json` file is downloaded.
+6. Store it outside version control, for example:
 
    ```
    credentials/service_account.json
    ```
 
-   La carpeta `credentials/` está en `.gitignore`. No subas el JSON al
-   repositorio ni lo pegues en issues o chats.
-7. Anota el email de la cuenta (`…@….iam.gserviceaccount.com`). Lo
-   necesitas para compartir el Sheet en el paso 3.
+   The `credentials/` folder is in `.gitignore`. Do not commit the JSON
+   or paste it into issues or chats.
+7. Note the account email (`…@….iam.gserviceaccount.com`). You need it
+   to share the Sheet in step 3.
 
 ## 2. Google Form
 
-1. Crea un [Google Form](https://forms.google.com/) con las preguntas de tu
-   dominio (lugar, municipio/área, tipo de reporte, etc.).
-2. En la pestaña **Respuestas**, elige **Vincular a Hojas de cálculo**
-   (crear una hoja nueva o usar una existente). Google creará una pestaña
-   de respuestas; el nombre típico en español es
-   `Respuestas de formulario 1`.
-3. Mantén encabezados estables. La librería los detecta con
-   `map_columns` por palabras clave (sin acentos ni mayúsculas). Si
-   cambias el texto de una pregunta, actualiza keywords u `overrides`.
-4. Para ubicación con precisión `gps` (sin Nominatim), conviene permitir
-   en el campo de lugar:
-   - coordenadas pegadas (`18.486090, -66.783960`)
-   - URL larga de Google Maps
-   - enlace corto de Compartir (`maps.app.goo.gl` / `goo.gl/maps`)
+1. Create a [Google Form](https://forms.google.com/) with questions for
+   your domain (place, municipality/area, report type, etc.).
+2. On the **Responses** tab, choose **Link to Sheets** (create a new
+   spreadsheet or use an existing one). Google creates a responses tab;
+   the typical Spanish default name is `Respuestas de formulario 1`.
+3. Keep headers stable. The library detects them with `map_columns` by
+   keywords (case- and accent-insensitive). If you change a question's
+   text, update keywords or `overrides`.
+4. For `gps` precision (no Nominatim), allow in the place field:
+   - pasted coordinates (`18.486090, -66.783960`)
+   - long Google Maps URL
+   - short Share link (`maps.app.goo.gl` / `goo.gl/maps`)
 
-   El detalle está en el [README](../README.md#captura-de-ubicación-y-niveles-de-precisión).
+   Details are in the
+   [README](../README.md#location-capture-and-precision-levels).
 
 ## 3. Google Sheet
 
-1. Abre el Sheet vinculado al Form. El **ID** está en la URL:
+1. Open the Sheet linked to the Form. The **ID** is in the URL:
 
    ```
    https://docs.google.com/spreadsheets/d/<SHEET_ID>/edit
    ```
 
-2. Comparte el documento con el email de la service account con permiso
-   de **Editor**. Hace falta para leer la pestaña de respuestas y
-   escribir la pestaña limpia (`sync` / `write_rows`).
-3. Pestaña de respuestas: la app solo la lee. No la borres ni cambies su
-   nombre sin actualizar el argumento `responses_tab`.
-4. Pestaña de salida (ej. `mapa`): si no existe, `write_rows` la crea y
-   la reescribe completa en cada sincronización.
-5. Para el Web Map en AGOL, la URL gviz debe ser legible **sin
-   autenticación**. Publica el Sheet (o al menos asegúrate de que
-   cualquiera con el enlace pueda verlo) para que
-   `gviz_csv_url(sheet_id, tab)` funcione como capa CSV remota.
+2. Share the document with the service-account email as **Editor**. This
+   is required to read the responses tab and write the clean tab
+   (`sync` / `write_rows`).
+3. Responses tab: the app only reads it. Do not delete it or rename it
+   without updating the `responses_tab` argument.
+4. Output tab (e.g. `mapa`): if missing, `write_rows` creates it and
+   rewrites it fully on every sync.
+5. For the AGOL Web Map, the gviz URL must be readable **without
+   authentication**. Publish the Sheet (or ensure anyone with the link
+   can view it) so `gviz_csv_url(sheet_id, tab)` works as a remote CSV
+   layer.
 
-   Formato de la URL:
+   URL format:
 
    ```
    https://docs.google.com/spreadsheets/d/<SHEET_ID>/gviz/tq?tqx=out:csv&sheet=<tab>
    ```
 
-## 4. Verificación rápida
+## 4. Quick checklist
 
-- [ ] Google Sheets API y Google Drive API habilitadas en el proyecto
-- [ ] JSON de la service account en `credentials/` (no versionado)
-- [ ] Sheet compartido con el email de la service account como **Editor**
-- [ ] Form vinculado a ese Sheet (pestaña de respuestas presente)
-- [ ] `SHEET_ID` y nombres de pestañas (`responses_tab`, `output_tab`)
-      listos para el [ejemplo mínimo](../examples/sync_minimal.py)
-      (también en el [README](../README.md#sincronizar-un-sheet))
-- [ ] Sheet visible públicamente (o con enlace) si vas a usar la capa CSV
-      en AGOL
+- [ ] Google Sheets API and Google Drive API enabled in the project
+- [ ] Service-account JSON under `credentials/` (not versioned)
+- [ ] Sheet shared with the service-account email as **Editor**
+- [ ] Form linked to that Sheet (responses tab present)
+- [ ] `SHEET_ID` and tab names (`responses_tab`, `output_tab`) ready for
+      the [minimal example](../examples/sync_minimal.py)
+      (also in the [README](../README.md#sync-a-sheet))
+- [ ] Sheet publicly visible (or link-shared) if you will use the CSV
+      layer on AGOL
 
-Cuando todo lo anterior esté listo, ejecuta el
-[ejemplo mínimo](../examples/README.md) o llama a
-`open_spreadsheet("SHEET_ID", "credentials/service_account.json")` y
-sigue con `sync` / `create_webmap` según el README.
+When the checklist is done, run the
+[minimal example](../examples/README.md) or call
+`open_spreadsheet("SHEET_ID", "credentials/service_account.json")` and
+continue with `sync` / `create_webmap` as in the README.
 
-## 5. Problemas frecuentes
+## 5. Common issues
 
-| Síntoma | Qué revisar |
+| Symptom | What to check |
 |---|---|
-| Error al abrir el Sheet / API no habilitada | En Cloud Console, confirma **Google Sheets API** y **Google Drive API** en el mismo proyecto de la service account. |
-| `403` / permiso denegado | Comparte el Sheet con el email `…@….iam.gserviceaccount.com` como **Editor** (no basta Viewer si vas a escribir la pestaña limpia). |
-| `WorksheetNotFound` en respuestas | El Form pudo renombrar la pestaña; usa el nombre exacto en `responses_tab` (por defecto suele ser `Respuestas de formulario 1`). |
-| gviz vacío o AGOL no carga el CSV | El Sheet (o el acceso “cualquiera con el enlace”) debe permitir lectura **sin** autenticación. Prueba la URL gviz en el navegador en una ventana privada. |
-| Columnas no detectadas | Los encabezados del Form cambiaron; ajusta `keywords` o usa `overrides` en `map_columns`. |
+| Error opening the Sheet / API not enabled | In Cloud Console, confirm **Google Sheets API** and **Google Drive API** are enabled in the same project as the service account. |
+| `403` / permission denied | Share the Sheet with the `…@….iam.gserviceaccount.com` email as **Editor** (Viewer is not enough if you write the clean tab). |
+| `WorksheetNotFound` on responses | The Form may have renamed the tab; use the exact name in `responses_tab` (Spanish default is often `Respuestas de formulario 1`). |
+| Empty gviz or AGOL does not load the CSV | The Sheet (or “anyone with the link”) must allow read access **without** authentication. Open the gviz URL in a private browser window. |
+| Columns not detected | Form headers changed; adjust `keywords` or use `overrides` in `map_columns`. |

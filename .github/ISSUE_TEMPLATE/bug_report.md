@@ -1,22 +1,22 @@
 ---
 name: Bug report
-about: Reporta un error para ayudarnos a mejorar
+about: Report a bug to help us improve
 labels: bug
 ---
 
-**Descripción del bug**
+**Bug description**
 
-**Pasos para reproducir**
+**Steps to reproduce**
 
 ```python
-# codigo minimo que reproduce el problema
+# minimal code that reproduces the issue
 ```
 
-**Comportamiento esperado**
+**Expected behavior**
 
-**Entorno**
+**Environment**
 
-- Versión de sheets-agol-kit:
-- Versión de Python:
-- Sistema operativo:
-- ¿Instalaste el extra `[agol]`?:
+- sheets-agol-kit version:
+- Python version:
+- Operating system:
+- Did you install the `[agol]` extra?:

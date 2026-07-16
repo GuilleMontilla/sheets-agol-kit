@@ -1,51 +1,51 @@
 # sheets-agol-kit
 
 ![CI](https://img.shields.io/github/actions/workflow/status/GuilleMontilla/sheets-agol-kit/ci.yml?branch=main&label=CI)
-![Version](https://img.shields.io/github/v/tag/GuilleMontilla/sheets-agol-kit?sort=semver&label=versi%C3%B3n)
+![Version](https://img.shields.io/github/v/tag/GuilleMontilla/sheets-agol-kit?sort=semver&label=version)
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue)
-![License](https://img.shields.io/badge/licencia-MIT-green)
+![License](https://img.shields.io/badge/license-MIT-green)
 
-Librería Python para el flujo **formulario → geocodificación → mapa vivo
-en ArcGIS Online**, usando herramientas gratuitas (Google Form + Sheets,
-Nominatim, cuenta pública de AGOL).
+Python library for the **form → geocoding → live map on ArcGIS Online**
+pipeline, using free tools (Google Form + Sheets, Nominatim, public AGOL
+account).
 
 ```
-Google Form → Sheet (respuestas) → geocoding (Nominatim) → Sheet (pestaña limpia)
-    → capa CSV vía gviz → Web Map en ArcGIS Online (cuenta pública)
+Google Form → Sheet (responses) → geocoding (Nominatim) → Sheet (clean tab)
+    → CSV layer via gviz → Web Map on ArcGIS Online (public account)
 ```
 
-El dominio de cada proyecto es configurable: bounding box, palabras clave
-de columnas, encabezados de salida y simbología se pasan como parámetros.
+Each project's domain is configurable: bounding box, column keywords,
+output headers, and symbology are always passed as parameters.
 
-## Instalación
+## Installation
 
 ```
 pip install "sheets-agol-kit @ git+https://github.com/GuilleMontilla/sheets-agol-kit"
 ```
 
-Para crear el Web Map en AGOL (módulo `webmap.create_webmap`) hace falta el
-extra `agol` (instala la librería `arcgis`):
+Creating the Web Map on AGOL (`webmap.create_webmap`) requires the `agol`
+extra (installs the `arcgis` library):
 
 ```
 pip install "sheets-agol-kit[agol] @ git+https://github.com/GuilleMontilla/sheets-agol-kit"
 ```
 
-## Uso
+## Usage
 
-Antes de sincronizar un Sheet o crear el Web Map:
+Before syncing a Sheet or creating the Web Map:
 
-1. Configura Form, Sheet y service account:
+1. Set up the Form, Sheet, and Google Cloud service account:
    [docs/configuration.md](docs/configuration.md)
-2. Ejemplo completo listo para adaptar:
+2. Full runnable example to adapt:
    [examples/](examples/)
 
-### Geocodificar
+### Geocode
 
 ```python
 from sheets_agol_kit import Geocoder
 
 geocoder = Geocoder(
-    user_agent="mi-proyecto/1.0 (contacto@ejemplo.com)",
+    user_agent="my-project/1.0 (contact@example.com)",
     bounds={"min_lat": 17.6, "max_lat": 18.7, "min_lon": -68.0, "max_lon": -65.1},
     query_suffix="Puerto Rico",
     cache_file="geocode_cache.json",
@@ -55,10 +55,10 @@ geocoder.geocode("Plaza Palmer", "Caguas")
 # {"lat": ..., "lon": ..., "precision": "place"}
 ```
 
-Detalle de `precision` y de los formatos de ubicación admitidos:
-[Captura de ubicación y niveles de precisión](#captura-de-ubicación-y-niveles-de-precisión).
+Details on `precision` and accepted location formats:
+[Location capture and precision levels](#location-capture-and-precision-levels).
 
-### Sincronizar un Sheet
+### Sync a Sheet
 
 ```python
 from sheets_agol_kit import open_spreadsheet, map_columns, sync
@@ -76,7 +76,7 @@ def build_row(response):
     area = response.get(columns["area"], "")
     location = geocoder.geocode(lugar, area)
     if location is None:
-        return None  # se omite la respuesta
+        return None  # skip this response
     return [location["lat"], location["lon"], lugar, area]
 
 written, total = sync(
@@ -88,7 +88,7 @@ written, total = sync(
 )
 ```
 
-### Crear el Web Map en AGOL
+### Create the Web Map on AGOL
 
 ```python
 from sheets_agol_kit import (
@@ -98,78 +98,77 @@ from sheets_agol_kit import (
 webmap_json = build_webmap_json(
     csv_url=gviz_csv_url("SHEET_ID", "mapa"),
     fields=[{"name": "lat", "type": "esriFieldTypeDouble", "alias": "lat"}, ...],
-    layer_title="Mis reportes",
+    layer_title="My reports",
     renderer=unique_value_renderer("estado", {"reportado": [230, 57, 53, 255]}),
     extent={"xmin": -67.5, "ymin": 17.6, "xmax": -65.1, "ymax": 18.7},
 )
 
 item = create_webmap(
-    username="usuario_agol",
+    username="agol_user",
     password="...",
-    title="Mi mapa vivo",
+    title="My live map",
     webmap_json=webmap_json,
 )
 print(item.homepage)
 ```
 
-## Alternativa a Survey123
+## Alternative to Survey123
 
 [ArcGIS Survey123](https://www.esri.com/en-us/arcgis/products/arcgis-survey123/overview)
-resuelve el mismo patrón formulario → mapa dentro del ecosistema ArcGIS,
-pero suele requerir organización o licencia de pago. Este proyecto no es
-producto de Esri ni un clon (no cubre, por ejemplo, captura offline nativa
-o firmas): reproduce el flujo con la pila gratuita descrita arriba.
+covers the same form → map pattern inside the ArcGIS ecosystem, but usually
+requires an organization or a paid license. This project is not an Esri
+product or a Survey123 clone (it does not cover, for example, native
+offline capture or signatures): it reproduces the flow with the free stack
+described above.
 
-## Casos de uso
+## Use cases
 
-La librería no fija un dominio. Ejemplos de configuración típica:
+The library does not hard-code a domain. Typical configuration examples:
 
-| Dominio | Entrada del Form | Salida en el mapa |
+| Domain | Form input | Map output |
 |---|---|---|
-| Vertidos / basura | lugar + municipio | capa por `estado` |
-| Árboles / inventario | especie + barrio | capa por especie |
-| Reportes ciudadanos | qué ocurrió + zona | capa por tipo |
+| Dumping / litter | place + municipality | layer by `estado` |
+| Trees / inventory | species + neighborhood | layer by species |
+| Citizen reports | what happened + zone | layer by type |
 
+## Location capture and precision levels
 
-## Captura de ubicación y niveles de precisión
+Form responses often include free text, coordinates, or Google Maps links.
+The geocoder normalizes those values to a point (`lat`, `lon`) and a
+precision level.
 
-Las respuestas del formulario suelen incluir texto libre, coordenadas o
-enlaces de Google Maps. El geocodificador normaliza esos valores a un
-punto (`lat`, `lon`) y un nivel de precisión.
+### Formats with `gps` precision (no Nominatim call)
 
-### Formatos con precisión `gps` (sin consultar Nominatim)
-
-Si el texto ya contiene una ubicación exacta, `geocode` devuelve
+If the text already contains an exact location, `geocode` returns
 `precision: "gps"`:
 
-- Coordenadas pegadas: `18.486090, -66.783960`
-- URL larga de Google Maps: pin exacto `!3d...!4d...` (prioridad) o vista
+- Pasted coordinates: `18.486090, -66.783960`
+- Long Google Maps URL: exact pin `!3d...!4d...` (priority) or view
   `@lat,lon`
-- Enlace corto del botón Compartir (`maps.app.goo.gl` / `goo.gl/maps`):
-  resuelve la redirección hasta la URL larga y almacena el resultado en
-  caché
+- Short Share-button link (`maps.app.goo.gl` / `goo.gl/maps`):
+  follows the redirect to the long URL and caches the result
 
-### Cascada cuando no hay GPS
+### Cascade when there is no GPS
 
-1. `"place"` — Nominatim con lugar + área + `query_suffix`
-2. `"area"` — centro del área de respaldo (segundo argumento de `geocode`)
-3. `None` — no fue posible geocodificar; en `sync`, esa fila se omite
+1. `"place"` — Nominatim with place + area + `query_suffix`
+2. `"area"` — center of the fallback area (second argument to `geocode`)
+3. `None` — could not geocode; in `sync`, that row is skipped
 
-El caché persistente en JSON evita repetir consultas idénticas. El
-bounding box descarta homónimos fuera de la región y restringe Nominatim
-con `viewbox` + `bounded`.
+The persistent JSON cache avoids repeating identical queries. The bounding
+box discards homonyms outside the region and restricts Nominatim with
+`viewbox` + `bounded`.
 
-## Módulos
+## Modules
 
-| Módulo | Qué hace |
+| Module | What it does |
 |---|---|
-| `geocoder` | `Geocoder`: Nominatim con caché persistente, coordenadas pegadas y enlaces de Google Maps, bounding box y sufijo de consulta configurables |
-| `sheets` | Abrir un Sheet (service account), leer respuestas, reescribir la pestaña limpia, URL gviz del CSV |
-| `columns` | Detectar columnas del Form por palabras clave, con overrides opcionales |
-| `pipeline` | `sync()`: orquesta lectura → transformación → escritura |
-| `webmap` | Construir el JSON del Web Map (capa CSV, renderer, pop-ups) y crearlo en AGOL |
+| `geocoder` | `Geocoder`: Nominatim with persistent cache, pasted coordinates and Google Maps links, configurable bounding box and query suffix |
+| `sheets` | Open a Sheet (service account), read responses, rewrite the clean tab, gviz CSV URL |
+| `columns` | Detect Form columns by keywords, with optional overrides |
+| `pipeline` | `sync()`: orchestrates read → transform → write |
+| `webmap` | Build the Web Map JSON (CSV layer, renderer, pop-ups) and create it on AGOL |
 
-## Desarrollo
+## Development
 
 ```
 python -m venv .venv
@@ -177,7 +176,7 @@ python -m venv .venv
 pip install -e .[dev]
 ```
 
-Tests, lint, formato y tipos (lo mismo que corre el CI):
+Tests, lint, format, and types (same as CI):
 
 ```
 pytest --cov
@@ -186,11 +185,11 @@ ruff format --check .
 mypy
 ```
 
-## Contribuir
+## Contributing
 
-Lee [CONTRIBUTING.md](CONTRIBUTING.md). Los cambios se registran en
+See [CONTRIBUTING.md](CONTRIBUTING.md). Changes are recorded in
 [CHANGELOG.md](CHANGELOG.md).
 
-## Licencia
+## License
 
 [MIT](LICENSE)

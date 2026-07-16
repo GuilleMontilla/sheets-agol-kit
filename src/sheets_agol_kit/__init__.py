@@ -1,4 +1,4 @@
-"""sheets-agol-kit: Google Sheets -> geocoding -> capa CSV / Web Map en AGOL."""
+"""sheets-agol-kit: Google Sheets -> geocoding -> CSV layer / Web Map on AGOL."""
 
 from .columns import map_columns, normalize
 from .geocoder import Geocoder

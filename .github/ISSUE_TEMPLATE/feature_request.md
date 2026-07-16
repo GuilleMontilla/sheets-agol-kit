@@ -1,13 +1,13 @@
 ---
 name: Feature request
-about: Propón una mejora o funcionalidad nueva
+about: Suggest an improvement or new feature
 labels: enhancement
 ---
 
-**¿Qué problema resuelve?**
+**What problem does this solve?**
 
-**Solución propuesta**
+**Proposed solution**
 
-**Alternativas consideradas**
+**Alternatives considered**
 
-**Contexto adicional** (ej. tipo de proyecto Form → mapa donde lo necesitas)
+**Additional context** (e.g. Form → map project type where you need this)

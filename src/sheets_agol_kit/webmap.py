@@ -1,11 +1,11 @@
-"""Creacion de un Web Map en ArcGIS Online cuya capa es un CSV por URL.
+"""Create an ArcGIS Online Web Map whose layer is a CSV by URL.
 
-Pensado para cuentas publicas de AGOL (sin hosted feature layers): el web map
-lee un CSV remoto (ej. el endpoint gviz de un Google Sheet) con refresh
-interval, simbologia por valores unicos y pop-ups.
+Aimed at public AGOL accounts (no hosted feature layers): the web map
+reads a remote CSV (e.g. a Google Sheet gviz endpoint) with a refresh
+interval, unique-value symbology, and pop-ups.
 
-Requiere el extra opcional: pip install sheets-agol-kit[agol]
-(la libreria arcgis se importa solo dentro de create_webmap).
+Requires the optional extra: pip install sheets-agol-kit[agol]
+(the arcgis library is imported only inside create_webmap).
 """
 
 import json
@@ -28,14 +28,14 @@ DEFAULT_BASEMAP = {
     ],
 }
 
-# Color RGBA como secuencia de 4 enteros 0-255
+# RGBA color as a sequence of 4 integers 0-255
 Color = Sequence[int]
 
 
 def simple_marker(
     color: Color, size: int = 10, outline_width: int = 1
 ) -> dict[str, Any]:
-    """Simbolo de punto circular (color RGBA como lista de 4 enteros)."""
+    """Circular point symbol (RGBA color as a list of 4 integers)."""
     return {
         "type": "esriSMS",
         "style": "esriSMSCircle",
@@ -49,9 +49,9 @@ def unique_value_renderer(
     field: str,
     value_colors: Mapping[Any, Color],
     default_color: Color = (120, 120, 120, 255),
-    default_label: str = "Otro",
+    default_label: str = "Other",
 ) -> dict[str, Any]:
-    """Renderer por valores unicos de un campo (dict valor -> color RGBA)."""
+    """Unique-value renderer for a field (dict value -> RGBA color)."""
     return {
         "type": "uniqueValue",
         "field1": field,
@@ -82,18 +82,18 @@ def build_webmap_json(
     basemap: dict[str, Any] | None = None,
     authoring_app: str = "sheets-agol-kit",
 ) -> dict[str, Any]:
-    """Construye el JSON del web map con una unica capa CSV por URL.
+    """Build the web map JSON with a single CSV layer by URL.
 
     Args:
-        csv_url: URL del CSV (ej. sheets.gviz_csv_url()).
-        fields: lista de campos esri ({"name", "type", "alias"}).
-        layer_title: titulo de la capa operacional.
-        renderer: drawingInfo renderer (ej. unique_value_renderer()).
-        popup_info: dict popupInfo o None para no configurar pop-ups.
-        extent: vista inicial {"xmin", "ymin", "xmax", "ymax"} en WGS84 o None.
-        refresh_interval: minutos entre refrescos de la capa CSV.
-        lat_field / lon_field: nombres de las columnas de coordenadas.
-        basemap: dict baseMap; por defecto el topografico de Esri.
+        csv_url: CSV URL (e.g. sheets.gviz_csv_url()).
+        fields: list of esri fields ({"name", "type", "alias"}).
+        layer_title: operational layer title.
+        renderer: drawingInfo renderer (e.g. unique_value_renderer()).
+        popup_info: popupInfo dict or None to skip pop-ups.
+        extent: initial view {"xmin", "ymin", "xmax", "ymax"} in WGS84 or None.
+        refresh_interval: minutes between CSV layer refreshes.
+        lat_field / lon_field: coordinate column names.
+        basemap: baseMap dict; defaults to Esri topographic.
     """
     from . import __version__
 
@@ -150,16 +150,16 @@ def create_webmap(
     share_everyone: bool = True,
     portal_url: str = "https://www.arcgis.com",
 ) -> Any:
-    """Crea el item Web Map en ArcGIS Online y devuelve el item creado.
+    """Create the Web Map item on ArcGIS Online and return the created item.
 
-    Requiere la libreria arcgis (extra [agol]).
+    Requires the arcgis library ([agol] extra).
     """
     from arcgis.gis import GIS, ItemProperties, ItemTypeEnum
 
     gis = GIS(portal_url, username, password)
-    # gis.content.add() esta roto en arcgis 2.4.3 con pandas 3.x
-    # (AttributeError: _is_geoenabled); se usa la API nueva Folder.add()
-    folder = gis.content.folders.get()  # carpeta raiz del usuario
+    # gis.content.add() is broken in arcgis 2.4.3 with pandas 3.x
+    # (AttributeError: _is_geoenabled); use the newer Folder.add() API
+    folder = gis.content.folders.get()  # user root folder
     job = folder.add(
         item_properties=ItemProperties(
             title=title,

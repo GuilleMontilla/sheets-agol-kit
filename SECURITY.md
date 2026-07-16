@@ -1,16 +1,16 @@
-# Seguridad
+# Security
 
-Si encuentras una vulnerabilidad en **sheets-agol-kit**, no abras un issue
-público.
+If you find a vulnerability in **sheets-agol-kit**, do not open a public
+issue.
 
-## Cómo reportar
+## How to report
 
-1. Usa [GitHub Private Vulnerability Reporting](https://github.com/GuilleMontilla/sheets-agol-kit/security/advisories/new)
-   (Security → Advisories → New draft advisory), **o**
-2. Contacta al mantenedor por un canal privado (perfil de GitHub).
+1. Use [GitHub Private Vulnerability Reporting](https://github.com/GuilleMontilla/sheets-agol-kit/security/advisories/new)
+   (Security → Advisories → New draft advisory), **or**
+2. Contact the maintainer through a private channel (GitHub profile).
 
-Incluye, si puedes: descripción del problema, pasos para reproducirlo e
-impacto estimado.
+Include, if you can: a description of the issue, steps to reproduce, and
+estimated impact.
 
-Responderemos lo antes posible y coordinaremos una corrección antes de
-cualquier divulgación pública.
+We will respond as soon as possible and coordinate a fix before any
+public disclosure.

@@ -1,6 +1,6 @@
-# Contribuir a sheets-agol-kit
+# Contributing to sheets-agol-kit
 
-Gracias por tu interés. Guía rápida:
+Thanks for your interest. Quick guide:
 
 ## Setup
 
@@ -8,13 +8,13 @@ Gracias por tu interés. Guía rápida:
 git clone https://github.com/GuilleMontilla/sheets-agol-kit
 cd sheets-agol-kit
 python -m venv .venv
-.venv\Scripts\activate      # en Linux/macOS: source .venv/bin/activate
+.venv\Scripts\activate      # on Linux/macOS: source .venv/bin/activate
 pip install -e .[dev]
 ```
 
-## Antes de abrir un PR
+## Before opening a PR
 
-Corre localmente lo mismo que el CI:
+Run locally the same checks as CI:
 
 ```
 pytest --cov
@@ -23,18 +23,18 @@ ruff format --check .
 mypy
 ```
 
-- Todo cambio de comportamiento lleva su test. Los tests no tocan la red:
-  mockea `requests` con `monkeypatch` (ver `tests/test_geocoder.py`).
-- Nada del dominio va fijo en el código de la librería: bounding boxes,
-  palabras clave, encabezados y simbología llegan siempre como parámetros.
+- Every behavior change needs a test. Tests must not hit the network:
+  mock `requests` with `monkeypatch` (see `tests/test_geocoder.py`).
+- Domain specifics stay out of library code: bounding boxes, keywords,
+  headers, and symbology are always passed as parameters.
 
-## Convenciones
+## Conventions
 
-- Ramas cortas desde `main`: `feat/nombre-corto`, `fix/nombre-corto`.
-- Commits en formato [Conventional Commits](https://www.conventionalcommits.org/):
+- Short branches from `main`: `feat/short-name`, `fix/short-name`.
+- Commits follow [Conventional Commits](https://www.conventionalcommits.org/):
   `feat:`, `fix:`, `docs:`, `chore:`, `test:`.
-- Anota la entrada correspondiente en `CHANGELOG.md` (sección Unreleased).
+- Add the matching entry in `CHANGELOG.md` (Unreleased section).
 
-## Reportar bugs o proponer mejoras
+## Reporting bugs or proposing features
 
-Usa los templates de issues del repositorio.
+Use the repository issue templates.
