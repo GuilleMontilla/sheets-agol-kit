@@ -35,7 +35,7 @@ pip install "sheets-agol-kit @ git+https://github.com/GuilleMontilla/sheets-agol
 ```
 
 Para crear el Web Map en AGOL (módulo `webmap.create_webmap`) hace falta el
-extra `agol` (instala la librería `arcgis`, que es pesada):
+extra `agol` (instala la librería `arcgis`):
 
 ```
 pip install "sheets-agol-kit[agol] @ git+https://github.com/GuilleMontilla/sheets-agol-kit"
