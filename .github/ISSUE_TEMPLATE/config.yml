@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Configuración Google (Form / Sheet / service account)
+    url: https://github.com/GuilleMontilla/sheets-agol-kit/blob/main/docs/configuration.md
+    about: Antes de reportar un fallo de acceso al Sheet, revisa la guía de configuración.
+  - name: Ejemplo mínimo de sync
+    url: https://github.com/GuilleMontilla/sheets-agol-kit/blob/main/examples/README.md
+    about: Script de referencia tras completar la checklist de configuración.

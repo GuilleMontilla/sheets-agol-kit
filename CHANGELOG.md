@@ -10,13 +10,19 @@ y el proyecto usa [Semantic Versioning](https://semver.org/lang/es/).
 ### Added
 
 - Documentación de configuración Google Form / Sheet / service account
-  (`docs/configuration.md`).
+  (`docs/configuration.md`), índice en `docs/README.md` y sección de
+  problemas frecuentes.
+- Ejemplo mínimo de sync (`examples/sync_minimal.py`) y guía en
+  `examples/README.md`.
+- `SECURITY.md`, plantilla de issues `config.yml` y Dependabot
+  (pip + github-actions).
 
 ### Changed
 
-- README: tono técnico, motivo frente a ArcGIS Survey123 (alternativa
-  gratuita al flujo formulario → mapa) y sección de captura de ubicación
-  / niveles de precisión.
+- README: primer viewport más corto (instalación antes del contraste con
+  Survey123); enlaces a docs de configuración y a `examples/`; tono
+  técnico y sección de captura de ubicación / niveles de precisión.
+- `.gitignore`: ignorar `pytest-cache-files-*/`.
 
 ## [0.1.0] - 2026-07-15
 

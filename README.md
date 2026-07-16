@@ -6,19 +6,8 @@
 ![License](https://img.shields.io/badge/licencia-MIT-green)
 
 Librería Python para el flujo **formulario → geocodificación → mapa vivo
-en ArcGIS Online**, usando herramientas gratuitas.
-
-[ArcGIS Survey123](https://www.esri.com/en-us/arcgis/products/arcgis-survey123/overview)
-resuelve ese mismo caso de uso dentro del ecosistema ArcGIS, pero suele
-requerir pertenecer a una organización o disponer de una licencia de
-pago (por ejemplo ArcGIS Pro / cuenta organizacional). Este proyecto
-ofrece una alternativa open source: Google Form + Sheets, geocoding con
-Nominatim y un Web Map en una cuenta pública de ArcGIS Online, sin
-hosted feature layers.
-
-No es un producto de Esri ni un clon de Survey123 (no cubre, por ejemplo,
-captura offline nativa o firmas). Reproduce el patrón formulario → mapa
-con la pila gratuita descrita abajo.
+en ArcGIS Online**, usando herramientas gratuitas (Google Form + Sheets,
+Nominatim, cuenta pública de AGOL).
 
 ```
 Google Form → Sheet (respuestas) → geocoding (Nominatim) → Sheet (pestaña limpia)
@@ -43,9 +32,12 @@ pip install "sheets-agol-kit[agol] @ git+https://github.com/GuilleMontilla/sheet
 
 ## Uso
 
-Antes de sincronizar un Sheet o crear el Web Map, configura el Google Form,
-el Sheet y la service account de Google Cloud:
-[docs/configuration.md](docs/configuration.md).
+Antes de sincronizar un Sheet o crear el Web Map:
+
+1. Configura Form, Sheet y service account:
+   [docs/configuration.md](docs/configuration.md)
+2. Ejemplo completo listo para adaptar:
+   [examples/](examples/)
 
 ### Geocodificar
 
@@ -119,6 +111,14 @@ item = create_webmap(
 )
 print(item.homepage)
 ```
+
+## Alternativa a Survey123
+
+[ArcGIS Survey123](https://www.esri.com/en-us/arcgis/products/arcgis-survey123/overview)
+resuelve el mismo patrón formulario → mapa dentro del ecosistema ArcGIS,
+pero suele requerir organización o licencia de pago. Este proyecto no es
+producto de Esri ni un clon (no cubre, por ejemplo, captura offline nativa
+o firmas): reproduce el flujo con la pila gratuita descrita arriba.
 
 ## Casos de uso
 

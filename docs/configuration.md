@@ -92,10 +92,22 @@ Nada se lee de variables de entorno: pasas la ruta del archivo como argumento.
 - [ ] Sheet compartido con el email de la service account como **Editor**
 - [ ] Form vinculado a ese Sheet (pestaña de respuestas presente)
 - [ ] `SHEET_ID` y nombres de pestañas (`responses_tab`, `output_tab`)
-      listos para el ejemplo de uso del [README](../README.md#sincronizar-un-sheet)
+      listos para el [ejemplo mínimo](../examples/sync_minimal.py)
+      (también en el [README](../README.md#sincronizar-un-sheet))
 - [ ] Sheet visible públicamente (o con enlace) si vas a usar la capa CSV
       en AGOL
 
-Cuando todo lo anterior esté listo, puedes llamar a
+Cuando todo lo anterior esté listo, ejecuta el
+[ejemplo mínimo](../examples/README.md) o llama a
 `open_spreadsheet("SHEET_ID", "credentials/service_account.json")` y
-seguir con `sync` / `create_webmap` según el README.
+sigue con `sync` / `create_webmap` según el README.
+
+## 5. Problemas frecuentes
+
+| Síntoma | Qué revisar |
+|---|---|
+| Error al abrir el Sheet / API no habilitada | En Cloud Console, confirma **Google Sheets API** y **Google Drive API** en el mismo proyecto de la service account. |
+| `403` / permiso denegado | Comparte el Sheet con el email `…@….iam.gserviceaccount.com` como **Editor** (no basta Viewer si vas a escribir la pestaña limpia). |
+| `WorksheetNotFound` en respuestas | El Form pudo renombrar la pestaña; usa el nombre exacto en `responses_tab` (por defecto suele ser `Respuestas de formulario 1`). |
+| gviz vacío o AGOL no carga el CSV | El Sheet (o el acceso “cualquiera con el enlace”) debe permitir lectura **sin** autenticación. Prueba la URL gviz en el navegador en una ventana privada. |
+| Columnas no detectadas | Los encabezados del Form cambiaron; ajusta `keywords` o usa `overrides` en `map_columns`. |
